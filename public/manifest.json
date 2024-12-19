@@ -1,0 +1,5 @@
+{
+  "name": "SAMM",
+  "description": "innovative approach to anonymous and secure multisig wallet management through email, building upon the Safe Anonymization Module (SAM) developed by our team previously under a SafeDAO grant. Inspired by the concept of the emailwallet.org, which leverages zkMail technology we aim to transfer these ideas to our SAM. Our proposal, allows users to manage their multisig Safe wallets privately via email, combining the simplicity of email communication with the advanced security and privacy of Zero-Knowledge proofs through native and seamless integration with Safe Ecosystem.",
+  "iconPath": "logo.svg"
+}
