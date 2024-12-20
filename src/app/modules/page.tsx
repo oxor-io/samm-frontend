@@ -180,7 +180,7 @@ export default function ModulesPage() {
                                 <Button size="sm" className="flex gap-2">
                                   Enabling...
                                   <span>
-                                    <RotateCw className="w-2 h-2 text-samm-white animate-spin" />
+                                    <RotateCw className="w-2 h-2 text-samm-black animate-spin" />
                                   </span>
                                 </Button>
                                 <TooltipProvider>
@@ -189,7 +189,7 @@ export default function ModulesPage() {
                                       <Info />
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <div className="bg-samm-black max-w-72 p-2 border-slate-400 border-solid border rounded-sm">
+                                      <div className="bg-samm-black max-w-72 p-2 gradient-border rounded-sm">
                                         <p className="text-center text-sm mb-2">
                                           If you don&apos;t have a transaction related with this
                                           module, please use one of these options
@@ -233,7 +233,7 @@ export default function ModulesPage() {
                                       <Info />
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <div className="bg-samm-black max-w-72 p-2 border-slate-400 border-solid border rounded-sm">
+                                      <div className="bg-samm-black max-w-72 p-2 gradient-border rounded-sm">
                                         <p className="text-center text-sm mb-2">
                                           If you don&apos;t have a transaction related with this
                                           module, please use of this option

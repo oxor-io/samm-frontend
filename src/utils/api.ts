@@ -85,6 +85,15 @@ export async function getUserSAMMs(): Promise<SAMMData[]> {
   return samms;
 }
 
+export async function updateThreshold(
+  sammId: number,
+  threshold: number | string
+): Promise<SAMMData> {
+  const url = `/api/samms/update?samm_id=${sammId}&threshold=${threshold}`;
+  const samm = await fetchWithAuth<SAMMData>(url, { method: 'PATCH' });
+  return samm;
+}
+
 export async function fetchTransactions(
   sammId: number,
   status: DBTransactionStatus,

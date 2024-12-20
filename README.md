@@ -2,9 +2,9 @@
 
 ### **Overview**
 
-The UI is implemented as a Safe React App built on the Safe App SDK. This application can be [added as a custom app](https://help.safe.global/en/articles/40859-add-a-custom-safe-app) in the standard Safe wallet UI.
+The UI is implemented as a Safe React App built on the Safe App SDK. This application can be [added as a custom app](https://help.safe.global/en/articles/40859-add-a-custom-safe-app) in the standard Safe wallet UI.You can access the deployed version by following this [link](https://samm-demo.oxor.io/).
 
-The UI is available only to SAMM members' emails and allows them to:
+The UI is available only to SAMM owners and members' emails and allows them to:
 
 - Monitor the status of each SAMM transaction.
 - Generate tx data for the Initiation email.
@@ -103,6 +103,55 @@ SAMM integrates with:
 - **Relayer Service**: Backend API for handling emails, DKIM verification, and ZK proof generation.
 
 #### API reference: [SAMM API Docs](https://samm.oxor.io/docs)
+
+---
+
+## **Deployment Instructions**
+
+1.  **Clone the Repository**:
+
+    ```bash
+    git clone <repository_url>
+    cd samm-ui
+    ```
+
+2.  **Set Environment Variables**:
+    Create a `.env` file in the root of the project and add the following required variables:
+    `bash
+    NEXT_PUBLIC_SAFE_PROXY_FACTORY=
+    NEXT_PUBLIC_DKIM_REGISTRY=
+    `
+3.  **Install Dependencies**:
+    Ensure you use the `-legacy-peer-deps` flag due to dependency conflicts in the Safe template:
+    `bash
+    npm install --legacy-peer-deps
+    `
+4.  **Customize Install Command for Hosting Platforms**:
+    If your hosting platform (e.g., Vercel, Netlify) automatically installs dependencies, you must customize the build command to include `npm install --legacy-peer-deps`. For example: - **Vercel**: - Go to your project settings in Vercel. - Set the "Install Command" to:
+    `bash
+            npm install --legacy-peer-deps
+            `
+
+        - **Netlify**:
+            - Go to your build settings.
+            - Under "Build Settings," modify the "Install Command" to:
+
+                ```bash
+                npm install --legacy-peer-deps
+                ```
+
+5.  **Run the Build Command**:
+    Build the application:
+    `bash
+    npm run build
+    `
+6.  **Deploy the Application**:
+    - Push your changes to your Git repository.
+    - Connect the repository to your hosting platform (e.g., Vercel, Netlify).
+    - Configure the environment variables (NEXT_PUBLIC_SAFE_PROXY_FACTORY and NEXT_PUBLIC_DKIM_REGISTRY) in the hosting platform's dashboard.
+7.  **Start the Application**:
+    - Your hosting platform should automatically start the application after deployment.
+    - Access your custom SAMM UI at the provided domain.
 
 ---
 

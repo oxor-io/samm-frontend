@@ -3,12 +3,14 @@
 import { useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { safeSDK } from '@/config/SDK';
+// import { safeSDK } from '@/config/SDK';
 import { useSAMMStore } from '@/store/sammStore';
 import { getSAMMsBySafeAddress } from '@/utils/api';
 import { SAMMData } from '@/types/samm';
 import { useSafeInfo } from '@/hooks/useSafeInfo';
 import LoadingSpinner from '@/components/LoadingSpinner';
+
+import SafeAppsSDK from '@safe-global/safe-apps-sdk';
 
 export default function HomePage() {
   const router = useRouter();
@@ -23,7 +25,9 @@ export default function HomePage() {
   const handleSafeApp = useCallback(async () => {
     try {
       setDataFromLocalStorage();
+      const safeSDK = new SafeAppsSDK();
       const { safeAddress, chainId, modules, isReadOnly } = await safeSDK.safe.getInfo();
+
       if (isReadOnly) {
         router.replace('/read-only');
         return;
@@ -31,7 +35,7 @@ export default function HomePage() {
 
       const sammData = await getSAMMsBySafeAddress(safeAddress, chainId);
 
-      if (!sammData) {
+      if (!sammData || sammData?.length === 0) {
         router.replace('/create-module');
         return;
       }

@@ -111,6 +111,7 @@ export default function SettingsPage() {
         <div className="flex flex-col gap-4 mt-4">
           {settingsConfig.map((config) => (
             <UnifiedSettingForm
+              sammId={sammData.id}
               key={config.name}
               config={config}
               samm={samm}

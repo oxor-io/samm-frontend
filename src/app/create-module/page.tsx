@@ -34,7 +34,7 @@ interface StepLayoutProps {
 
 const StepLayout = ({ title, showTitleOnBigScreen = true, children }: StepLayoutProps) => {
   const titleClass = cn(
-    'text-2xl md:text-6xl text-center lg:text-start lg:text-8xl text-samm-white leading-snug',
+    'text-2xl md:text-6xl text-center lg:text-start lg:text-8xl gradient-text leading-snug',
     {
       'hidden lg:block': !showTitleOnBigScreen,
     }
@@ -42,7 +42,7 @@ const StepLayout = ({ title, showTitleOnBigScreen = true, children }: StepLayout
   return (
     <SafeGuard>
       <div className="bg-samm-black">
-        <div className="max-w-[1400px]  mx-auto flex flex-col lg:flex-row p-8 items-center justify-center lg:justify-between min-h-screen gap-10">
+        <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row p-8 items-center justify-center lg:justify-between min-h-screen gap-10">
           <h1 className={titleClass}>{title}</h1>
           {children}
         </div>
@@ -80,6 +80,7 @@ export default function CreateModulePage() {
       const token = await getOwnerToken(signedData, data.moduleName);
 
       localStorage.setItem('accessToken', token.access_token);
+      localStorage.setItem('isAuthenticated', 'true');
       setToken(token.access_token);
       const response = await getUserSAMMs();
 

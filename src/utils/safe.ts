@@ -27,21 +27,18 @@ import { Restriction } from '@/types/restriction';
 import { ModuleFormData } from '@/containers/create-page/CreateModuleForm';
 import { fetchMembersRoot } from './api';
 import { SAMMData } from '@/types/samm';
-
-let provider: AlchemyProvider | BrowserProvider | null = null;
+import { getUserSelectedAccount } from '@/components/AccountSelectionModal';
 
 export function getProvider(chainId: number): AlchemyProvider | BrowserProvider {
   // @ts-expect-error validation
   if (!window?.ethereum) {
-    const network = getNetworkNameByChainId(chainId);
     // TODO right now we are using public api, but we could change it to increase bandwidth capabilities
-    provider = new AlchemyProvider(network);
+    const network = getNetworkNameByChainId(chainId);
+    return new AlchemyProvider(network);
   }
 
   // @ts-expect-error validation
-  provider = new BrowserProvider(window.ethereum, chainId);
-
-  return provider;
+  return new BrowserProvider(window.ethereum, chainId);
 }
 
 export function getContractWithProvider(
@@ -327,13 +324,7 @@ export async function requestSignature(
 
   // @ts-expect-error Validated above
   const provider = new BrowserProvider(window.ethereum, chainId);
-
-  const signer = await provider.getSigner();
-  const signerAddress = await signer.getAddress();
-
-  if (safeOwners.findIndex((owner) => owner.toLowerCase() === signerAddress.toLowerCase()) === -1) {
-    throw new Error('Signer is not an owner of the safe');
-  }
+  const signer = await getActiveSigner(provider, safeOwners);
 
   const block = await signer.provider.getBlock('latest');
   if (!block) {
@@ -352,15 +343,14 @@ export async function requestSignature(
       { name: 'signer', type: 'address' },
       { name: 'module', type: 'address' },
       { name: 'time', type: 'uint256' },
-      // { name: 'message', type: 'string' },
     ],
   };
 
+  const signerAddress = await signer.getAddress();
   const data = {
     signer: signerAddress.toLowerCase(),
     module: sammAddress.toLowerCase(),
     time: block.timestamp.toString(),
-    // message: 'This signature authorizes the deployment of the SAMM module.',
   };
 
   const messageHash = TypedDataEncoder.hash(domain, msgTypes, data);
@@ -386,10 +376,15 @@ function getBrowserProvider(chainId: number) {
 }
 
 export async function deployModuleByUser(data: ModuleFormData) {
-  const proxyFactory = process.env.NEXT_PUBLIC_SAFE_PROXY_FACTORY_SEPOLIA as string;
+  const proxyFactory = process.env.NEXT_PUBLIC_SAFE_PROXY_FACTORY as string;
   validateAddress(proxyFactory, 'Proxy Factory');
 
-  const { safeAddress, chainId } = await safeSDK.safe.getInfo();
+  const safeSDK = new SafeAppsSDK();
+  const { safeAddress, chainId, owners } = await safeSDK.safe.getInfo();
+
+  const provider = getBrowserProvider(chainId);
+  const signer = await getActiveSigner(provider, owners);
+
   const proxyFactoryInstance = getContractWithProvider(
     proxyFactory,
     JSON.stringify(SafeProxyFactoryABI),
@@ -419,9 +414,6 @@ export async function deployModuleByUser(data: ModuleFormData) {
     [SAMM_CONFIG.SAMM_SINGLETON, sammSetupCallData, salt]
   );
 
-  const provider = getBrowserProvider(chainId);
-
-  const signer = await provider.getSigner();
   const txReceipt = await signer.sendTransaction({
     to: proxyFactory,
     data: createProxyPayload,
@@ -500,4 +492,63 @@ export async function updateMembersRoot(sammData: SAMMData | null, emails: strin
   const newMemberRoot = await fetchMembersRoot(emails);
   const currentRoot = sammData.root;
   await setSAMMSettings(samm, 'setMembersRoot', newMemberRoot, currentRoot);
+}
+
+async function getCurrentConnectedOwnerAccounts(
+  provider: BrowserProvider,
+  safeOwners: string[]
+): Promise<string[]> {
+  let connectedOwnerAccounts: string[] = await provider.send('eth_requestAccounts', []);
+  console.log('Current connected accounts to SAMM: ', connectedOwnerAccounts);
+
+  if (!connectedOwnerAccounts) {
+    throw new Error('Failed call to provider, method: eth_requestAccounts');
+  }
+
+  connectedOwnerAccounts = connectedOwnerAccounts.filter((account) =>
+    safeOwners.some((owner) => owner.toLowerCase() === account.toLowerCase())
+  );
+
+  console.log('Connected Safe Owner accounts:', connectedOwnerAccounts);
+
+  return connectedOwnerAccounts;
+}
+
+export async function getActiveSigner(provider: BrowserProvider, safeOwners: string[]) {
+  try {
+    let connectedOwnerAccounts = await getCurrentConnectedOwnerAccounts(provider, safeOwners);
+
+    let signer;
+
+    if (connectedOwnerAccounts.length === 0) {
+      console.warn('No accounts detected that are owners of the current Safe, retrying...');
+      await provider.send('wallet_revokePermissions', [
+        {
+          eth_accounts: {},
+        },
+      ]);
+
+      connectedOwnerAccounts = await getCurrentConnectedOwnerAccounts(provider, safeOwners);
+
+      if (connectedOwnerAccounts.length === 0) {
+        throw new Error(
+          'We tried to prompt user to connect correct account, but we still unable to find it. Please go to SAMM external website and connect proper account '
+        );
+      }
+    }
+
+    if (connectedOwnerAccounts.length === 1) {
+      console.warn('Single account found ', connectedOwnerAccounts, safeOwners);
+      signer = await provider.getSigner(connectedOwnerAccounts[0]);
+    } else {
+      console.warn('Multiple accounts found ', connectedOwnerAccounts, safeOwners);
+      const selectedAccount = await getUserSelectedAccount(connectedOwnerAccounts);
+      signer = await provider.getSigner(selectedAccount);
+    }
+
+    return signer;
+  } catch (error) {
+    console.error('Failed to retrieve active signer:', error);
+    throw error;
+  }
 }

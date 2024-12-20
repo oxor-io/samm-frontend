@@ -17,7 +17,7 @@ import {
 
 const formSchema = z
   .object({
-    moduleName: z.string(),
+    moduleName: z.string().optional(),
     emailAddresses: z
       .string()
       .min(3, 'Email addresses are required')

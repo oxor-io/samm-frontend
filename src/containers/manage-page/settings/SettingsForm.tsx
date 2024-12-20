@@ -21,6 +21,7 @@ import { BaseContract, ContractInterface } from 'ethers';
 import { getSAMMSettings, setSAMMSettings } from '@/utils/safe';
 import { safeSDK } from '@/config/SDK';
 import { showToast } from '@/helpers/showToast';
+import { updateThreshold } from '@/utils/api';
 
 export interface SettingConfig {
   name: string;
@@ -35,12 +36,14 @@ export interface SettingConfig {
 interface SettingsFormProps {
   samm: BaseContract & Omit<ContractInterface, keyof BaseContract>;
   toast: ReturnType<typeof useToast>['toast'];
+  sammId: number;
   defaultValue?: string | number;
 }
 export default function UnifiedSettingForm({
   config,
   samm,
   toast,
+  sammId,
   defaultValue = '',
 }: SettingsFormProps & { config: SettingConfig }) {
   const [currentValue, setCurrentValue] = useState<string>('');
@@ -70,6 +73,11 @@ export default function UnifiedSettingForm({
     setIsSubmitting(true);
     try {
       const value = String(data[config.name]);
+
+      if (config.name === 'threshold') {
+        await updateThreshold(sammId, value);
+      }
+
       await setSAMMSettings(samm, config.setterMethod, value, currentValue);
       const { owners } = await safeSDK.safe.getInfo();
       showToast(
